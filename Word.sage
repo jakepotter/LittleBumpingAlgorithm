@@ -41,7 +41,8 @@ class Word(object):
         bumpedWord[t-1] -= 1
         return Word(bumpedWord, self.size + resize) #adds 1 to size if needed
 
-
+    #given a reduced word, bumps and then keeps bumping until it is reduced again
+    #returns all words obtained along the way (changes this?)
     def LBA(self):
         #define r (from the Little algorithm)
         r = 0
@@ -54,13 +55,12 @@ class Word(object):
         for i in range(r+2,self.size+1):
             if self.sigma(i) < self.sigma(r):
                 s = i
-        sigma_s = self.sigma(s)
 
         wordList = [self]
         #times[i] is the "time" where the ith bump takes place.
         #Values are in {1,2,...,m} where m is the length of the word.
         #Also, diagram indices start at 1.
-        t = self.lcd.diagram[sigma_s - 1][r - 1]
+        t = self.lcd.diagram[self.sigma(s) - 1][r - 1]
         if t == 'X' or t == '-':
             print "!!!!!!!!!!!!!!!!! SOMETHING WENT WRONG (outside)!!!!!!!!!!!!!!!!!", "t = ", t
         times = [int(t)]
@@ -73,18 +73,20 @@ class Word(object):
             #stop if the word is reduced
             if v.reduced: 
                 break
-            t = v.lcd.diagram[sigma_s - 1][r - 1]
+            t = v.lcd.diagram[self.sigma(s) - 1][r - 1]
             if t == 'X' or t == '-':
+                print v.lcd.pp(includeWord=True)
+                print "r =", r, "    s =", s, "\n"
                 print "!!!!!!!!!!!!!!!!! SOMETHING WENT WRONG (inside)!!!!!!!!!!!!!!!!!", "t = ", t
             times += [int(t)]
-        return wordList[-1]
+        return wordList
 
 
     #returns a list which is a path down the L-S tree to a leaf (Grassmanian permutation)
     def LStraversal(self):
         path = [self]
         while not path[-1].Grassmanian:
-            path += [path[-1].LBA()]
+            path += [path[-1].LBA()[-1]]
         part = path[-1].FindPartition()
         return path, part
 
@@ -103,7 +105,7 @@ class Word(object):
         return tuple(part)
 
 
-    def __repr__(self):
+    def __str__(self):
         ret = ""
         for i in self.word:
             ret += " %d" % (i)
@@ -114,6 +116,25 @@ class Word(object):
         if self.word == other.word:
             return True
         return False
+
+
+    def latexLBA(self, directory = "TexLBA", fileName = "texLBA.tex"):
+        wordList = self.LBA() 
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        tex = open("%s/%s" % (directory,fileName), 'w')
+        tex.write("\\documentclass[12pt]{article}\n")
+        tex.write("\\usepackage{tikz}\n")
+        tex.write("\\usepackage[margin=1in]{geometry}\n")
+        tex.write("\\pagenumbering{gobble}\n")
+        tex.write("\\begin{document}\n")
+        for w in wordList:
+            tex.write(w.lcd.pp(.55,True))
+            tex.write("\n\\vspace{15mm}\n")
+            tex.write("%------------------------------------\n")
+        tex.write("\\end{document}")
+        print "wrote to directory:", directory
+        tex.close()
 
 
 #Given a permutation, print out partitions corresponding to leaves of the L-S tree 
