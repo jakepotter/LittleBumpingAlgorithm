@@ -140,25 +140,36 @@ class LCD(object):
         return texString
 
 
-    #def __add__(self, other):
-    #    real_part = self.real_part + other.real_part
-    #    i_part = self.i_part + other.i_part
-    #    j_part = self.j_part + other.j_part
-    #    k_part = self.k_part + other.k_part
-    #    return Quaternion(real_part, i_part, j_part, k_part)
+    def plot(self):
+        """Plot the line diagram of the given word list.
+        For best effect:
+        l = LCD(word); p = l.plot(); p.show(gridlines=True)
+        """
+        max_x = len(self.word)
+        max_y = max(self.word) + 1 # max swap moves from max_y -> max_y + 1
+        ordering = list(range(1,max_y+1))
+        c_x = 0
+        p = Graphics()
+        for idx in range(len(self.word)):
+            s = self.word[idx]
+            for l in range(1,max_y+1):
+                if l == s or l == s+1:
+                    continue
+                p = p + line([[c_x, l],   [c_x+1, l]])
 
+            p = p + line([[c_x, s  ],   [c_x+1, s+1]])
+            p = p + line([[c_x, s+1],   [c_x+1, s  ]])
+            tmp = ordering[s-1]
+            ordering[s-1] = ordering[s]
+            ordering[s] = tmp
+            c_x += 1
+        for oidx in range(len(ordering)):
+            p = p + text(str(ordering[oidx]), (max_x+0.1, oidx+1),
+                         horizontal_alignment='right')
+        print("Final permutation is {}".format(ordering))
+        return(p)
+        
 
 if __name__ == "__main__":
     pass
-
-
-
-
-
-
-
-
-
-
-
 
